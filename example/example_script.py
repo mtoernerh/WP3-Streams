@@ -1,7 +1,7 @@
 # main_script.py
 import geopandas as gpd
 import os
-from scripts.WP3_stream_merge import fix_stream_network
+from code.WP3_stream_merge import fix_stream_network
 
 def main():
     # Set the working directory
