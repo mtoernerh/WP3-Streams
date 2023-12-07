@@ -4,7 +4,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/mtoernerh/WP3-Streams">
-    <img src="images/logo.svg" alt="Logo" width="80" height="80">
+    <img src="images/logo_WP3.svg" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">WP3-Streams</h3>
