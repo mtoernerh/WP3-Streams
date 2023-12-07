@@ -36,6 +36,12 @@
     <li>
       <a href="#description">Description</a>
     </li>
+    <li>
+      <a href="#usage">Usage</a></li>
+      <ul>
+        <li><a href="#data">Data</a></li>
+      </ul>
+    </li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
@@ -67,6 +73,18 @@ Below is a simple example of processing streams represented as simple linestring
 ![Example](images/stream_correction.svg)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Usage
+
+As mentioned in the introduction the state of the code is chaotic and messy, and it is therefore not very user friendly. There are three main requirements to the input data for the function to work, first the linestring input representing streams should be simple [linestring](https://help.arcgis.com/en/geodatabase/10.0/sdk/arcsde/concepts/geometry/shapes/types.htm) and cannot be a [multilinestring](https://help.arcgis.com/en/geodatabase/10.0/sdk/arcsde/concepts/geometry/shapes/types.htm), second these linestring should be seperated into different features whenever there is fork of streams such as at confluences, and third a given network of linestrings must be topologically connected so end-start vertices should be intersecting, otherwise the function cannot detect upstream segments.
+For the terminus feature, that is where the stream mouths should be located such as the coastline, lake or other streams/rivers, is not very strict with requirements and only needs to be actually intersecting the furtherst downstream linestring of a given stream network.
+
+### Data
+
+The following data is included for testing and running the example.
+* Coastline (linestring shapefile)
+* WFD targeted streams (lingstring shapefile)
+
 
 ## License
 
