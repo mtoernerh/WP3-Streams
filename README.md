@@ -6,6 +6,11 @@ It is important that the linestring input is topologically connected, that is th
 
 ![Description](images/WP3_description.svg)
 
+Below is a simple example of processing streams represented as simple linestrings, where proper delineation of main- and substreams and flow direction is assigned. Each color represents a unique linestring, and the mid-line arrow shows the direction of flow.
+
+
+
+![Example](images/stream_correction.svg)
 
 
 
@@ -14,5 +19,4 @@ It is important that the linestring input is topologically connected, that is th
 
 
 
-
-[Description]: https://github.com/mtoernerh/WP3-Streams/images/box.svg
+[Example]: https://github.com/mtoernerh/WP3-Streams/images/stream_correction.svg
