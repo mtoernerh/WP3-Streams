@@ -6,7 +6,7 @@ It is important that the linestring input is topologically connected, that is th
 
 ![Description](images/WP3_description.svg)
 
-Below is a simple example of processing streams represented as simple linestrings, where proper delineation of main- and substreams and flow direction is assigned. Each color represents a unique linestring, and the mid-line arrow shows the direction of flow.
+Below is a simple example of processing streams represented as simple linestrings, where proper delineation of main- and substreams and flow direction is assigned. Each color represents a unique linestring, and the mid-line arrow shows the direction of flow. You will notice in the before image, that flow direction is random with no apparent pattern, furthermore the lack of stream delineation makes it ambigious as to which linestrings belong to which streams. This if of course one intepretation of that, but it is easily understandable and the method for delineating is systematic and consistent.
 
 
 
