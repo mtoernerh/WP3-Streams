@@ -15,7 +15,7 @@
     <a href="https://github.com/mtoernerh"><strong>Explore the contents »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/mtoernerh/WP3-Streams/example">View Examples</a>
+    <a href="https://github.com/mtoernerh/WP3-Streams/tree/main/example">View Examples</a>
     ·
     <a href="https://github.com/mtoernerh/WP3-Streams/issues">Report Bug</a>
     ·
