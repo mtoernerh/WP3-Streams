@@ -1,28 +1,29 @@
 # main_script.py
 import geopandas as gpd
-import os
-from code.WP3_stream_merge import fix_stream_network
+import sys, os
+sys.path.append(os.getcwd())
+from WP3_stream_merge import fix_stream_network, split_lines_at_junctions
+
 
 def main():
     # Set the working directory
-    working_directory = os.environ.get("WORKING_DIRECTORY", r"M:\VP3_Fyn\Renew\Python")
-    os.chdir(working_directory)
+    wd = os.path.dirname(os.getcwd())
 
     # Read in stream shapefile
-    streams = gpd.read_file('data/VP3_Fyn_streams.shp')
-    streams = streams.rename(columns={"Shape_Leng": "Length"})
-
+    streams = gpd.read_file(fr'{wd}\Data\VP3_Fyn_streams.shp')
+    streams_pp = split_lines_at_junctions(streams)
+    
     # Read in terminus shapefile (Coastline)
-    terminus = gpd.read_file('data/VP3_Fyn_coastline.shp')
+    terminus = gpd.read_file(fr'{wd}\Data\coastline_buffer.shp')
     terminus = terminus.rename(columns={"Shape_Leng": "Length"})
 
     # Add buffer to the terminus geometry
-    terminus['buffer'] = terminus['geometry'].buffer(100)
+    terminus['buffer'] = terminus['geometry'].buffer(50)
     terminus['geometry'] = terminus['buffer']
     terminus = terminus.drop(columns=['buffer'])
 
     # Set output folder path
-    outpath = 'output/'
+    outpath = fr'{wd}\Output/'
     is_exist = os.path.exists(outpath)
 
     # Create output folder if it does not already exist
@@ -31,7 +32,16 @@ def main():
         print("The folder '" + str(outpath) + "' is created!")
 
     # Run upstream merge function
-    fix_stream_network(streams, terminus, outpath, topo_id='VP3')
+    fix_stream_network(stream_in = streams_pp, 
+                       terminus  = terminus, 
+                       outpath   = outpath, 
+                       topo_id   = 'VP3')
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
