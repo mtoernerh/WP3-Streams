@@ -13,7 +13,7 @@ from geopandas.tools import overlay
 from shapely.ops import linemerge
 import shapely.ops
 from shapely.wkt import loads
-from shapely.geometry import LineString, Point
+from shapely.geometry import LineString, Point, MultiLineString
 from shapely.ops import split
 import warnings
 import numpy as np
@@ -119,8 +119,7 @@ def merge_streams_upstream(stream_input, name_string, terminus):
         # Intersection between Stream feature i and termini features #
         # =============================================================================#
         terminus_intersect = overlay(
-            current_stream, terminus, how="intersection", keep_geom_type=False
-        )  # Intersection between the current stream feature and terminus features
+            current_stream, terminus, how="intersection", keep_geom_type=False)  # Intersection between the current stream feature and terminus features
         counter += 1  # Increment the counter
         touch_check = 1  # Set a flag indicating that the current stream feature touches one of the terminus features
         # =============================================================================#
@@ -172,12 +171,8 @@ def merge_streams_upstream(stream_input, name_string, terminus):
                 # =============================================================================#
                 # Two different scenarios, either there are upstream features or not #
                 # =============================================================================#
-                if (
-                    len(upstream_lengths) == 0
-                ):  # If Length is 0, then Stream i does not touch another upstream segment
-                    stream_input.loc[index, object_column_name] = (
-                        stream_input.loc[index, object_column_name] + name_string
-                    )  # Adding pre-defined name string to ID name for current_stream
+                if (len(upstream_lengths) == 0):  # If Length is 0, then Stream i does not touch another upstream segment
+                    stream_input.loc[index, object_column_name] = (stream_input.loc[index, object_column_name] + name_string)  # Adding pre-defined name string to ID name for current_stream
                     Stream_out = pd.concat([Stream_out, stream_input.iloc[[index]]])
                     touch_check = len(
                         Stream_table.loc[
@@ -189,58 +184,43 @@ def merge_streams_upstream(stream_input, name_string, terminus):
                 # The total upstream lengths are compared between touching upstream segments #
                 # =============================================================================#
                 else:  # When there is at least 1 upstream touching feature, this loop starts
-                    total_upstream_length = upstream_features[
-                        "Length"
-                    ].tolist()  # Returns a list of the length of each touching upstream segment
-                    touch_feature = (
-                        0  # Counter to iterate over each tóuching upstream segment
-                    )
-                    for touch_feature in range(0, len(upstream_features)):
+                    total_upstream_length = upstream_features["Length"].tolist()  # Returns a list of the length of each touching upstream segment
+                    touch_feature = 0  # Counter to iterate over each tóuching upstream segment
+                    for touch_feature in range(len(upstream_features)):
+                        Stream_length_table = Stream_table.copy(deep=True)  # A temporary copy of already temp Stream_table used in this loop only
+                        
+                        upstream_indexes = list(upstream_features.index.values)  # List of index value for touching upstream segments
+                        
+                        Stream_length_table.loc[upstream_indexes, "geometry"] = None  # Touching upstream segments geometries are set to None so they cannot be encountered again
+                       
+                        #current_upstream_feature = upstream_features.iloc[[touch_feature]]  # Selecting ith upstream touching feature
+                        #current_upstream_feature = (current_upstream_feature.unary_union)  # Might not be neccesary
+                        current_upstream_feature = upstream_features.iloc[[touch_feature]]["geometry"].unary_union
                         while_check = 1  # Another abitrary while check, that can use any value above 0
-                        Stream_length_table = Stream_table.copy(
-                            deep=True
-                        )  # A temporary copy of already temp Stream_table used in this loop only
-                        upstream_indexes = list(
-                            upstream_features.index.values
-                        )  # List of index value for touching upstream segments
-                        Stream_length_table.loc[
-                            upstream_indexes, "geometry"
-                        ] = None  # Touching upstream segments geometries are set to None so they cannot be encountered again
-                        current_upstream_feature = upstream_features.iloc[
-                            [touch_feature]
-                        ]  # Selecting ith upstream touching feature
-                        current_upstream_feature = (
-                            current_upstream_feature.unary_union
-                        )  # Might not be neccesary
-                        while (
-                            while_check > 0
-                        ):  # A while loop is active as long as there is still another new upstream touching feature
-                            Stream_upstream_touch = Stream_length_table.loc[
-                                Stream_length_table.touches(current_upstream_feature)
-                            ]  # The next touching upstream feature is found
-                            current_upstream_feature = shapely.ops.unary_union(
-                                Stream_upstream_touch["geometry"]
-                            )  # Neccessary in case multiple upstream features, because these operation has to work on single features
-                            upstream_indexes = list(
-                                Stream_upstream_touch.index.values
-                            )  # Removing the already encountered features from future encounters
+                        
+                        while (while_check > 0):  # A while loop is active as long as there is still another new upstream touching feature
+                            Stream_upstream_touch = Stream_length_table.loc[Stream_length_table.touches(current_upstream_feature)]  # The next touching upstream feature is found
+                            
+                            #current_upstream_feature = shapely.ops.unary_union(Stream_upstream_touch["geometry"])  # Neccessary in case multiple upstream features, because these operation has to work on single features
+                           
+                            upstream_indexes = list(Stream_upstream_touch.index.values)  # Removing the already encountered features from future encounters
+                            
                             Stream_length_table.loc[upstream_indexes, "geometry"] = None
-                            total_upstream_length[touch_feature] = (
-                                total_upstream_length[touch_feature]
-                                + Stream_upstream_touch["Length"].sum()
-                            )  # Adding the upstream length to the first encountered upstream feature
+                           
+                            total_upstream_length[touch_feature] = (total_upstream_length[touch_feature]+ Stream_upstream_touch["Length"].sum())  # Adding the upstream length to the first encountered upstream feature
+                            
                             geometry_upstream = Stream_upstream_touch["geometry"]
-                            upstream_geometries = pd.concat(
-                                [upstream_geometries, geometry_upstream]
-                            )
-                            while_check = len(
-                                Stream_length_table.loc[
-                                    Stream_length_table.touches(
-                                        current_upstream_feature
-                                    )
-                                ]
-                            )
-                        touch_feature = touch_feature + 1
+                            
+                            upstream_geometries = pd.concat([upstream_geometries, geometry_upstream])
+                            
+                            current_upstream_feature = (geometry_upstream).unary_union
+                            
+                            if len(Stream_upstream_touch) == 0:
+                                while_check = 0
+                            else:
+                                while_check = len(Stream_length_table.loc[Stream_length_table.touches(current_upstream_feature)])
+                            
+                        #touch_feature = touch_feature + 1
 
                     geometry_touch_list = upstream_geometries.tolist()
                     geometry_touch_list = shapely.ops.unary_union(geometry_touch_list)
@@ -589,3 +569,65 @@ def fix_stream_network(stream_in, terminus, outpath, topo_id):
     merged_streams_gdf.to_file(
         f"{outpath}streams_{topo_id}.shp", driver="ESRI Shapefile"
     )
+
+
+def explode_multilinestrings(geometry):
+    if isinstance(geometry, LineString):
+        return [geometry]
+    elif isinstance(geometry, MultiLineString):
+        return list(geometry)
+    else:
+        raise ValueError("Input geometry must be LineString or MultiLineString")
+
+def split_lines_at_junctions(gdf, outpath = None):
+    exploded_lines = geopandas.GeoDataFrame(columns=gdf.columns)
+   # encountered_geometries = set()  # Track encountered geometries to remove duplicates
+    encountered_geometries = []
+    for idx, row in gdf.iterrows():
+        exploded_geoms = explode_multilinestrings(row.geometry)
+        for geom in exploded_geoms:
+            # Check if geometry is already encountered
+            exploded_lines = exploded_lines.append({'geometry': geom}, ignore_index=True)
+
+    uniqline = geopandas.GeoDataFrame(columns=gdf.columns)
+    
+    for line in exploded_lines["geometry"]:
+        if not any(p.equals(line) for p in uniqline["geometry"]):
+            uniqline = uniqline.append({'geometry': line}, ignore_index=True)
+    
+    split_lines = geopandas.GeoDataFrame(columns=gdf.columns)
+    
+    for index, line in uniqline.iterrows():
+        start_point = line.geometry.coords[0]
+        end_point = line.geometry.coords[-1]
+    
+        # Check if start or end points of the line intersect with any other line
+        start_intersect = uniqline[uniqline.geometry.touches(Point(start_point)) & (uniqline.index != index)]
+        end_intersect = uniqline[uniqline.geometry.touches(Point(end_point)) & (uniqline.index != index)]
+        
+        if not start_intersect.empty or not end_intersect.empty:
+            # Split the line at start or end vertices
+            split_line = [line.geometry]
+            for idx, intersect_line in start_intersect.iterrows():
+                split_line.append(intersect_line.geometry)
+            for idx, intersect_line in end_intersect.iterrows():
+                split_line.append(intersect_line.geometry)
+            
+            # Create separate lines for each segment
+            for segment in split_line:
+                split_lines = split_lines.append({'geometry': segment}, ignore_index=True)
+        else:
+            split_lines = split_lines.append(line)
+    
+    uniqline = geopandas.GeoDataFrame(columns=gdf.columns)
+    
+    for line in split_lines["geometry"]:
+        if not any(p.equals(line) for p in uniqline["geometry"]):
+            uniqline = uniqline.append({'geometry': line}, ignore_index=True)
+    
+    uniqline['Length'] = uniqline['geometry'].length
+    uniqline['ID'] = ""
+    uniqline.crs = gdf.crs
+    if outpath is not None:
+        uniqline.to_file(outpath)
+    return uniqline
